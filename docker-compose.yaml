@@ -1,0 +1,162 @@
+networks:
+  gin:
+    external: true
+
+services:
+  pg:
+    image: postgres:latest
+    container_name: pg1
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: user
+    ports:
+      - 5432:5432
+    networks:
+      - gin
+    volumes:
+      - ./dbdata/postgres/data:/var/lib/postgresql/data
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis1
+    restart: always
+    ports:
+      - 6379:6379
+    networks:
+      - gin
+    volumes:
+      - ./dbdata/redis/data:/var/lib/redis/data
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    command: [ "redis-server", "--requirepass", "123456", "--appendonly", "yes" ]
+
+  consul:
+    image: hashicorp/consul:1.16
+    container_name: consul
+    ports:
+      - "8500:8500"    # Web UI 和 API
+      - "8600:8600/udp" # DNS 服务（可选）
+    networks:
+      - gin
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    command: "agent -dev -client=0.0.0.0"
+
+  user:
+    build:
+      context: .
+      dockerfile: cmd/user/Dockerfile
+    environment:
+      SERVICE_ID: "user-1"
+      SERVICE_NAME: "user"
+      SERVICE_ADDRESS: "user"
+    ports:
+      - "50051:50051"
+    networks:
+      - gin
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    restart: unless-stopped
+
+  order:
+    build:
+      context: .
+      dockerfile: cmd/order/Dockerfile
+    environment:
+      SERVICE_ID: "order-1"
+      SERVICE_NAME: "order"
+      SERVICE_ADDRESS: "order"
+    ports:
+      - "50052:50052"
+    networks:
+      - gin
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    restart: unless-stopped
+
+  gateway:
+    build:
+      context: .
+      dockerfile: cmd/gateway/Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - gin
+    depends_on:
+      - user
+      - order
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./dbdata/nginx/conf.d/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    depends_on:
+      - gateway
+    networks:
+      - gin
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    networks:
+      - gin
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    networks:
+      - gin
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8081:8080"
+    networks:
+      - gin
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local-kafka
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro

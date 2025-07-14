@@ -1,0 +1,63 @@
+server:
+  user:
+    host: "0.0.0.0"
+    grpcPort: "50051"   # gRPC 监听端口
+    name: "user"
+    httpPort: "8081"  # HTTP 监听端口
+  order:
+    host: "0.0.0.0"
+    grpcPort: "50052"   # gRPC 监听端口
+    name: "order"
+    httpPort: "8082"  # HTTP 监听端口
+  gateway:
+    host: "0.0.0.0"
+    port: "8080"    # HTTP 网关监听端口
+    gateway: "gateway"
+
+database:
+  host: pg1
+  port: 5432
+  user: user
+  password: 123456
+  database: user
+  schema: public
+  dialect: postgres
+  level: info # 1:Silent 2:Error 3:Warn 4:Info 值越小级别越高
+
+redis:
+  host: redis1
+  port: 6379
+  password: "123456"         # 如果没有密码可以留空
+  db: 0                # 默认 DB 索引
+  poolSize: 10         # 连接池大小，根据项目并发量调整
+  minIdleConns: 2      # 最小空闲连接数
+
+sms:
+  provider: aliyun     # 短信服务商，如 aliyun, tencent, twilio 等
+  accessKeyId: "your-access-key-id"
+  accessKeySecret: "your-access-key-secret"
+  signName: "YourSign"            # 短信签名
+  templateCode: "SMS_123456789"   # 短信模板 ID
+  region: "cn-hangzhou"           # 区域（如使用阿里云）
+  codeExpireSeconds: 300             # 短信验证码有效时长（秒）
+
+jwt:
+  secret: "tokentest"
+  expire_seconds: 60480  # 7天
+
+rocketmq:
+  nameServer: "rocketmq-namesrv:9876"
+  groupName: "gin-demo-group"
+  producerTopic: "user-events"
+  consumerTopic: "user-events"
+  retryTimes: 3
+
+consul:
+  address: "consul:8500"
+  healthCheckInterval: "10s"
+
+kafka:
+  brokers:
+    - "kafka:9092"
+  topic: "order-events"
+  groupID: "order-consumer-group"
