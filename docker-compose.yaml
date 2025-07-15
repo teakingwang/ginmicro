@@ -102,7 +102,7 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./dbdata/nginx/conf.d/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./resources/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
     depends_on:

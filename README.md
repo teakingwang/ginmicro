@@ -18,3 +18,6 @@ localhost:50052 \
 order.OrderService.GetOrder
 
 grpcurl -v -plaintext -proto api/order/order.proto -import-path api -import-path third_party -d '{"id": 100000000000000001}' localhost:50052 order.OrderService.GetOrder
+
+# http
+curl http://localhost:8080/v1/user/100000000000000001
