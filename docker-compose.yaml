@@ -57,6 +57,7 @@ services:
       SERVICE_NAME: "user"
       SERVICE_ADDRESS: "user"
     ports:
+      - "8081:8081"
       - "50051:50051"
     networks:
       - gin
@@ -74,6 +75,7 @@ services:
       SERVICE_NAME: "order"
       SERVICE_ADDRESS: "order"
     ports:
+      - "8082:8082"
       - "50052:50052"
     networks:
       - gin
