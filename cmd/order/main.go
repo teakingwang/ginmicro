@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/teakingwang/ginmicro/config"
 	"github.com/teakingwang/ginmicro/internal/order/app"
 	"github.com/teakingwang/ginmicro/internal/order/controller"
+	"github.com/teakingwang/ginmicro/internal/task"
 	"github.com/teakingwang/ginmicro/pkg/consul"
 	"github.com/teakingwang/ginmicro/pkg/logger"
+	"github.com/teakingwang/ginmicro/pkg/mq"
 	"github.com/teakingwang/ginmicro/pkg/utils/idgen"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
@@ -109,6 +112,30 @@ func run() error {
 		logger.Infof("gRPC server listening on %s", grpcAddr)
 		if err := s.Serve(lis); err != nil {
 			logger.Errorf("gRPC server failed: %v", err)
+		}
+	}()
+
+	// 启动 Kafka 消费者
+	go func() {
+		kafkaClientOrder := mq.NewKafkaClient(
+			config.Config.Kafka.Brokers,
+			config.Config.Kafka.Topic,
+			config.Config.Kafka.GroupID,
+		)
+
+		// 初始化任务管理器
+		taskManager := task.NewTaskManager(
+			kafkaClientOrder,
+			ctx.OrderService, // 假设 appContext 中包含 OrderService
+		)
+
+		// 启动消费者
+		consumerCtx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		logger.Info("Starting Kafka consumers...")
+		if err := taskManager.Start(consumerCtx); err != nil {
+			logger.Errorf("Task manager error: %v", err)
 		}
 	}()
 
