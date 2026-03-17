@@ -58,7 +58,7 @@ func run() error {
 	// 注入依赖
 	ctx, err := app.NewAppContext()
 	if err != nil {
-		return fmt.Errorf("new appcontext err:%v", err)
+		panic(fmt.Errorf("new appcontext err:%v", err))
 	}
 
 	// 启动 HTTP 服务
@@ -73,7 +73,8 @@ func run() error {
 
 	// 启动 gRPC 服务
 	go func() {
-		lis, err := net.Listen("tcp", ":"+config.Config.Server.Order.GRPCPort)
+		grpcAddr := "0.0.0.0:" + config.Config.Server.Order.GRPCPort
+		lis, err := net.Listen("tcp", grpcAddr)
 		if err != nil {
 			logger.Errorf("failed to listen grpc: %v", err)
 			return
@@ -89,9 +90,9 @@ func run() error {
 			logger.Errorf("failed to create consul client: %v", err)
 			return
 		}
-		serviceID := config.GetServiceID()
-		serviceName := config.GetServiceName()
-		serviceAddress := config.GetServiceAddress()
+		serviceID := config.Config.Server.Order.Name + "-" + config.Config.Server.Order.GRPCPort
+		serviceName := config.Config.Server.Order.Name
+		serviceAddress := config.Config.Server.Order.Host
 		servicePort, err := strconv.Atoi(config.Config.Server.Order.GRPCPort)
 		if err != nil {
 			logger.Errorf("invalid service port: %v", err)
@@ -105,7 +106,7 @@ func run() error {
 		}
 		defer consulClient.DeregisterService(serviceID)
 
-		logger.Infof("gRPC server listening on :%s", config.Config.Server.Order.GRPCPort)
+		logger.Infof("gRPC server listening on %s", grpcAddr)
 		if err := s.Serve(lis); err != nil {
 			logger.Errorf("gRPC server failed: %v", err)
 		}
@@ -129,6 +130,8 @@ func waitForShutdown() {
 
 func registerHealthCheck(s *grpc.Server) {
 	hs := health.NewServer()
+	// 设置空服务名和 order 服务名的健康状态
 	hs.SetServingStatus("", grpc_health_v1.HealthCheckResponse_SERVING)
+	hs.SetServingStatus("order", grpc_health_v1.HealthCheckResponse_SERVING)
 	grpc_health_v1.RegisterHealthServer(s, hs)
 }

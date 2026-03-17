@@ -72,7 +72,8 @@ func run() error {
 
 	// 启动 gRPC 服务
 	go func() {
-		lis, err := net.Listen("tcp", ":"+config.Config.Server.Order.GRPCPort)
+		grpcAddr := "0.0.0.0:" + config.Config.Server.User.GRPCPort
+		lis, err := net.Listen("tcp", grpcAddr)
 		if err != nil {
 			logger.Errorf("failed to listen grpc: %v", err)
 			return
@@ -88,23 +89,23 @@ func run() error {
 			logger.Errorf("failed to create consul client: %v", err)
 			return
 		}
-		serviceID := config.GetServiceID()
-		serviceName := config.GetServiceName()
-		serviceAddress := config.GetServiceAddress()
-		servicePort, err := strconv.Atoi(config.Config.Server.Order.GRPCPort)
+		serviceID := config.Config.Server.User.Name + "-" + config.Config.Server.User.GRPCPort
+		serviceName := config.Config.Server.User.Name
+		serviceAddress := config.Config.Server.User.Host
+		servicePort, err := strconv.Atoi(config.Config.Server.User.GRPCPort)
 		if err != nil {
 			logger.Errorf("invalid service port: %v", err)
 			return
 		}
 
-		logger.Infof("Registering order service to Consul: %s", serviceID)
-		if err := consulClient.RegisterService(serviceID, serviceName, serviceAddress, servicePort, []string{"grpc", "order"}); err != nil {
+		logger.Infof("Registering user service to Consul: %s", serviceID)
+		if err := consulClient.RegisterService(serviceID, serviceName, serviceAddress, servicePort, []string{"grpc", "user"}); err != nil {
 			logger.Errorf("consul register error: %v", err)
 			return
 		}
 		defer consulClient.DeregisterService(serviceID)
 
-		logger.Infof("gRPC server listening on :%s", config.Config.Server.Order.GRPCPort)
+		logger.Infof("gRPC server listening on %s", grpcAddr)
 		if err := s.Serve(lis); err != nil {
 			logger.Errorf("gRPC server failed: %v", err)
 		}
@@ -128,6 +129,8 @@ func waitForShutdown() {
 
 func registerHealthCheck(s *grpc.Server) {
 	hs := health.NewServer()
+	// 设置空服务名和 user 服务名的健康状态
 	hs.SetServingStatus("", grpc_health_v1.HealthCheckResponse_SERVING)
+	hs.SetServingStatus("user", grpc_health_v1.HealthCheckResponse_SERVING)
 	grpc_health_v1.RegisterHealthServer(s, hs)
 }

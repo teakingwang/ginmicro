@@ -3,25 +3,27 @@ networks:
     external: true
 
 services:
-  pg:
-    image: postgres:latest
-    container_name: pg1
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: 123456
-      POSTGRES_DB: user
+      MYSQL_ROOT_PASSWORD: root123456
+      MYSQL_DATABASE: user
+      MYSQL_USER: user
+      MYSQL_PASSWORD: 123456
     ports:
-      - 5432:5432
+      - 3306:3306
     networks:
       - gin
     volumes:
-      - ./dbdata/postgres/data:/var/lib/postgresql/data
+      - ./dbdata/mysql/data:/var/lib/mysql
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
+    command: --default-authentication-plugin=mysql_native_password
 
   redis:
     image: redis:7-alpine
-    container_name: redis1
+    container_name: redis
     restart: always
     ports:
       - 6379:6379
@@ -80,22 +82,6 @@ services:
       - /etc/timezone:/etc/timezone:ro
     restart: unless-stopped
 
-  gateway:
-    build:
-      context: .
-      dockerfile: cmd/gateway/Dockerfile
-    ports:
-      - "8080:8080"
-    networks:
-      - gin
-    depends_on:
-      - user
-      - order
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
-    restart: unless-stopped
-
   nginx:
     image: nginx:alpine
     container_name: nginx
@@ -105,8 +91,6 @@ services:
       - ./resources/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
-    depends_on:
-      - gateway
     networks:
       - gin
 
@@ -148,7 +132,7 @@ services:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
     ports:
-      - "8081:8080"
+      - "8080:8080"
     networks:
       - gin
     depends_on:

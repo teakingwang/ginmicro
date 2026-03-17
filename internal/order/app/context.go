@@ -57,13 +57,13 @@ func NewAppContext() (*AppContext, error) {
 	}
 
 	// 连接 user 服务 gRPC
-	dClient, err := consul.NewConsulDiscovery("consul:8500")
+	dClient, err := consul.NewConsulDiscovery(config.Config.Consul.Address)
 	if err != nil {
 		logger.Error("Failed to connect to Consul:", err)
 		return nil, err
 	}
 
-	conn, err := dClient.GetGRPCConn("user")
+	conn, err := dClient.GetGRPCConn(config.Config.Server.User.Name)
 	if err != nil {
 		logger.Error("Failed to connect to user service:", err)
 		return nil, err

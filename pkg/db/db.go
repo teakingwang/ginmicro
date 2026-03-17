@@ -16,8 +16,8 @@ func NewDB() (*gorm.DB, error) {
 	c := &config.Config.Database
 
 	switch Dialect(c.Dialect) {
-	case Postgres:
-		gdb, err = NewPostgres(c)
+	case MySQL:
+		gdb, err = NewMySQL(c)
 		if err != nil {
 			return nil, err
 		}

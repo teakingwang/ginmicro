@@ -28,9 +28,8 @@ type KafkaConfig struct {
 }
 
 type ServerConfig struct {
-	User    ServiceConfig `yaml:"user" json:"user"`
-	Order   ServiceConfig `yaml:"order" json:"order"`
-	Gateway ServiceConfig `yaml:"gateway" json:"gateway"` // 新增 Gateway 服务配置
+	User  ServiceConfig `yaml:"user" json:"user"`
+	Order ServiceConfig `yaml:"order" json:"order"`
 }
 
 type ServiceConfig struct {
@@ -153,14 +152,4 @@ func GetServiceName() string {
 		return v
 	}
 	return "default-service"
-}
-
-func GetServiceAddress() string {
-	// 优先取环境变量
-	if addr := os.Getenv("SERVICE_ADDRESS"); addr != "" {
-		return addr
-	}
-
-	// fallback：读取配置文件
-	return Config.Server.Gateway.Host
 }
