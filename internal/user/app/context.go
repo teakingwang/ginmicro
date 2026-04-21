@@ -7,6 +7,7 @@ import (
 	"github.com/teakingwang/ginmicro/pkg/datastore"
 	"github.com/teakingwang/ginmicro/pkg/db"
 	"github.com/teakingwang/ginmicro/pkg/logger"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"time"
 )
@@ -54,11 +55,17 @@ func NewAppContext() (*AppContext, error) {
 }
 
 func seedInitialUser(db *gorm.DB) error {
+	bytes, err := bcrypt.GenerateFromPassword([]byte("admin"), bcrypt.DefaultCost)
+	if err != nil {
+		logger.Errorf("Failed to hash password: %v", err)
+		return err
+	}
 	user := &model.User{
 		UserID:    100000000000000001, // 使用你的 Snowflake 或其他 ID 生成器
-		Username:  "guest",
+		Username:  "admin",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
+		Password:  string(bytes),
 	}
 
 	if err := db.Create(user).Error; err != nil {

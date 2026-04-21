@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+
 	"github.com/teakingwang/ginmicro/internal/user/model"
 	"gorm.io/gorm"
 )
@@ -9,6 +10,8 @@ import (
 type UserRepo interface {
 	Migrate() error
 	GetByID(ctx context.Context, userID int64) (*model.User, error)
+	GetAll(ctx context.Context) ([]*model.User, int64, error)
+	GetByUsername(ctx context.Context, username string) (*model.User, error)
 }
 
 type userRepo struct {
@@ -26,6 +29,35 @@ func (repo *userRepo) Migrate() error {
 func (repo *userRepo) GetByID(ctx context.Context, userID int64) (*model.User, error) {
 	u := &model.User{}
 	err := repo.db.Where("user_id = ?", userID).First(u).Error
+	if gorm.ErrRecordNotFound == err {
+		return nil, nil
+	}
+	return u, err
+}
+
+func (repo *userRepo) GetAll(ctx context.Context) ([]*model.User, int64, error) {
+	var l []*model.User
+	var total int64
+	err := repo.db.Model(&model.User{}).Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if total == 0 {
+		return []*model.User{}, 0, nil
+	}
+
+	err = repo.db.Model(&model.User{}).Find(&l).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return l, total, nil
+}
+
+func (repo *userRepo) GetByUsername(ctx context.Context, username string) (*model.User, error) {
+	u := &model.User{}
+	err := repo.db.Where("username = ?", username).First(u).Error
 	if gorm.ErrRecordNotFound == err {
 		return nil, nil
 	}
