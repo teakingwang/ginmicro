@@ -13,6 +13,7 @@ type UserRepo interface {
 	GetByID(ctx context.Context, userID int64) (*model.User, error)
 	GetAll(ctx context.Context) ([]*model.User, int64, error)
 	GetByUsername(ctx context.Context, username string) (*model.User, error)
+	Create(ctx context.Context, user *model.User) error
 }
 
 type userRepo struct {
@@ -63,4 +64,8 @@ func (repo *userRepo) GetByUsername(ctx context.Context, username string) (*mode
 		return nil, nil
 	}
 	return u, err
+}
+
+func (repo *userRepo) Create(ctx context.Context, user *model.User) error {
+	return repo.db.Create(user).Error
 }

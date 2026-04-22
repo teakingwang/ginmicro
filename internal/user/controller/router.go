@@ -31,6 +31,7 @@ func NewHTTPRouter(svc service.UserService) *gin.Engine {
 		v1.POST("/login", h.Login)
 		v1.GET("/list", h.GetUserList)
 		v1.GET("/:id", h.GetUser)
+		v1.POST("/create", h.CreateUser)
 	}
 
 	return r

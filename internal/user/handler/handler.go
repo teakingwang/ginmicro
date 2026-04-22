@@ -36,9 +36,11 @@ func (h *UserHandler) Login(c *gin.Context) {
 	resp := &LoginResp{
 		Token: token,
 		User: &UserItem{
-			ID:       userDTO.ID,
+			UserID:   userDTO.UserID,
 			Username: userDTO.Username,
 			Nickname: userDTO.Nickname,
+			Email:    userDTO.Email,
+			Mobile:   userDTO.Mobile,
 		},
 	}
 
@@ -47,7 +49,7 @@ func (h *UserHandler) Login(c *gin.Context) {
 
 func (h *UserHandler) GetUserList(c *gin.Context) {
 	req := GetUserListReq{}
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := c.ShouldBindQuery(&req); err != nil {
 		errs.ResponseError(c, errs.CodeInvalidArgs, err.Error())
 		return
 	}
@@ -62,9 +64,11 @@ func (h *UserHandler) GetUserList(c *gin.Context) {
 
 	for _, dto := range userDTOList {
 		list = append(list, &UserItem{
-			ID:       dto.ID,
+			UserID:   dto.UserID,
 			Username: dto.Username,
 			Nickname: dto.Nickname,
+			Email:    dto.Email,
+			Mobile:   dto.Mobile,
 		})
 	}
 
@@ -98,9 +102,37 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 
 	resp := GetUserResp{
 		User: &UserItem{
-			ID:       userDTO.ID,
+			UserID:   userDTO.UserID,
 			Username: userDTO.Username,
 			Nickname: userDTO.Nickname,
+			Email:    userDTO.Email,
+			Mobile:   userDTO.Mobile,
+		},
+	}
+
+	errs.ResponseSuccessWithData(c, resp)
+}
+
+func (h *UserHandler) CreateUser(c *gin.Context) {
+	req := &CreateUserReq{}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		errs.ResponseError(c, errs.CodeInvalidArgs, err.Error())
+		return
+	}
+
+	userDTO, err := h.svc.CreateUser(c.Request.Context(), req.Username, req.Password, req.Email, req.Nickname)
+	if err != nil {
+		errs.ResponseError(c, errs.CodeDatabaseError, err.Error())
+		return
+	}
+
+	resp := CreateUserResp{
+		User: &UserItem{
+			UserID:   userDTO.UserID,
+			Username: userDTO.Username,
+			Nickname: userDTO.Nickname,
+			Email:    userDTO.Email,
+			Mobile:   userDTO.Mobile,
 		},
 	}
 

@@ -6,9 +6,13 @@ type LoginReq struct {
 }
 
 type UserItem struct {
-	ID       int64  `json:"id"`
-	Username string `json:"username"`
-	Nickname string `json:"nickname"`
+	UserID     int64  `json:"user_id"`
+	Username   string `json:"username"`
+	Nickname   string `json:"nickname"`
+	StatusName string `json:"status_name"`
+	RoleName   string `json:"role_name"`
+	Email      string `json:"email"`
+	Mobile     string `json:"mobile"`
 }
 
 type LoginResp struct {
@@ -24,5 +28,16 @@ type GetUserListResp struct {
 }
 
 type GetUserResp struct {
+	User *UserItem `json:"user"`
+}
+
+type CreateUserReq struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+	Email    string `json:"email" binding:"omitempty,email"`
+	Nickname string `json:"nickname" binding:"required"`
+}
+
+type CreateUserResp struct {
 	User *UserItem `json:"user"`
 }

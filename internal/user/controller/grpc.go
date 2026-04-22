@@ -37,7 +37,7 @@ func (uc *userController) GetUser(ctx context.Context, req *user.GetUserRequest)
 	}
 
 	return &user.GetUserResponse{
-		Id:       dto.ID,
+		Id:       dto.UserID,
 		Username: dto.Username,
 		Email:    dto.Email,
 	}, nil
