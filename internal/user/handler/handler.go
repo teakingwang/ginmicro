@@ -2,7 +2,6 @@ package handler
 
 import (
 	"github.com/teakingwang/ginmicro/pkg/errs"
-	"net/http"
 	"strconv"
 
 	"github.com/teakingwang/ginmicro/api/user"
@@ -22,35 +21,28 @@ func NewUserHandler(svc service.UserService) *UserHandler {
 }
 
 func (h *UserHandler) Login(c *gin.Context) {
-	type LoginRequest struct {
-		Username string `json:"username" binding:"required"`
-		Password string `json:"password" binding:"required"`
-	}
-
-	var req LoginRequest
+	req := &LoginReq{}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"code": 400, "msg": "请求参数错误"})
+		errs.ResponseError(c, errs.CodeInvalidArgs, err.Error())
 		return
 	}
 
-	token, user, err := h.svc.Login(c.Request.Context(), req.Username, req.Password)
+	token, userDTO, err := h.svc.Login(c.Request.Context(), req.Username, req.Password)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"code": 401, "msg": err.Error()})
+		errs.ResponseError(c, errs.CodeUnauthorized, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code": 0,
-		"msg":  "success",
-		"data": gin.H{
-			"token": token,
-			"user": gin.H{
-				"id":       user.ID,
-				"username": user.Username,
-				"email":    user.Email,
-			},
+	resp := &LoginResp{
+		Token: token,
+		User: &UserItem{
+			ID:       userDTO.ID,
+			Username: userDTO.Username,
+			Nickname: userDTO.Nickname,
 		},
-	})
+	}
+
+	errs.ResponseSuccessWithData(c, resp)
 }
 
 func (h *UserHandler) GetUserList(c *gin.Context) {
@@ -112,5 +104,5 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 		},
 	}
 
-	c.JSON(http.StatusOK, resp)
+	errs.ResponseSuccessWithData(c, resp)
 }
