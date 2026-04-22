@@ -28,10 +28,6 @@ func NewAppContext() (*AppContext, error) {
 
 	// 初始化 Redis
 	redisStore := datastore.NewRedisClient()
-	if err != nil {
-		logger.Errorf("Failed to initialize Redis: %v", err)
-		return nil, err
-	}
 
 	// 初始化 UserService
 	userRepo := repository.NewUserRepo(gormDB)
@@ -66,6 +62,7 @@ func seedInitialUser(db *gorm.DB) error {
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 		Password:  string(bytes),
+		IsSystem:  true,
 	}
 
 	if err := db.Create(user).Error; err != nil {
