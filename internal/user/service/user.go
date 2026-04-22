@@ -16,12 +16,13 @@ type UserDTO struct {
 	ID       int64
 	Username string
 	Email    string
+	Nickname string
 }
 
 type UserService interface {
-	GetUser(ctx context.Context, id int64) (*UserDTO, error)
-	GetUserList(ctx context.Context) ([]*UserDTO, int64, error)
 	Login(ctx context.Context, username, password string) (string, *UserDTO, error)
+	GetUserList(ctx context.Context) ([]*UserDTO, int64, error)
+	GetUser(ctx context.Context, id int64) (*UserDTO, error)
 }
 
 type userService struct {
@@ -31,47 +32,6 @@ type userService struct {
 
 func NewUserService(userRepo repository.UserRepo, redis datastore.Store) UserService {
 	return &userService{userRepo: userRepo, redis: redis}
-}
-
-func (s *userService) GetUser(ctx context.Context, id int64) (*UserDTO, error) {
-	logger.Info("GetUser called with ID:", id)
-	ur, err := s.userRepo.GetByID(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-
-	if ur == nil {
-		return nil, nil
-	}
-
-	return &UserDTO{
-		ID:       ur.UserID,
-		Username: ur.Username,
-		Email:    ur.Email,
-	}, nil
-}
-
-func (s *userService) GetUserList(ctx context.Context) ([]*UserDTO, int64, error) {
-	logger.Info("GetUserList called")
-	urs, total, err := s.userRepo.GetAll(ctx)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	if total == 0 {
-		return nil, 0, nil
-	}
-
-	var dtos []*UserDTO
-	for _, ur := range urs {
-		dtos = append(dtos, &UserDTO{
-			ID:       ur.UserID,
-			Username: ur.Username,
-			Email:    ur.Email,
-		})
-	}
-
-	return dtos, total, nil
 }
 
 func (s *userService) Login(ctx context.Context, username, password string) (string, *UserDTO, error) {
@@ -107,5 +67,47 @@ func (s *userService) Login(ctx context.Context, username, password string) (str
 		ID:       user.UserID,
 		Username: user.Username,
 		Email:    user.Email,
+		Nickname: user.Nickname,
+	}, nil
+}
+
+func (s *userService) GetUserList(ctx context.Context) ([]*UserDTO, int64, error) {
+	logger.Info("GetUserList called")
+	urs, total, err := s.userRepo.GetAll(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if total == 0 {
+		return nil, 0, nil
+	}
+
+	var dtos []*UserDTO
+	for _, ur := range urs {
+		dtos = append(dtos, &UserDTO{
+			ID:       ur.UserID,
+			Username: ur.Username,
+			Email:    ur.Email,
+		})
+	}
+
+	return dtos, total, nil
+}
+
+func (s *userService) GetUser(ctx context.Context, id int64) (*UserDTO, error) {
+	logger.Info("GetUser called with ID:", id)
+	ur, err := s.userRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if ur == nil {
+		return nil, nil
+	}
+
+	return &UserDTO{
+		ID:       ur.UserID,
+		Username: ur.Username,
+		Email:    ur.Email,
 	}, nil
 }

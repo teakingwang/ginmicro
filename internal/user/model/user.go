@@ -16,6 +16,7 @@ type User struct {
 	Gender    string     `gorm:"column:gender;not null;default:''"`
 	Birthday  string     `gorm:"column:birthday;not null;default:''"`
 	Status    UserStatus `gorm:"column:status;not null;default:0"` // 用户状态：0=未激活，1=正常，2=暂时封禁，3=已注销，4=永久封禁
+	IsSystem  bool       `gorm:"column:is_system;not null;default:false"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`

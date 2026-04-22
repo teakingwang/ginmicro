@@ -28,9 +28,9 @@ func NewHTTPRouter(svc service.UserService) *gin.Engine {
 
 	v1 := r.Group("/v1/user")
 	{
-		v1.GET("/:id", h.GetUser)
-		v1.GET("/list", h.GetUserList)
 		v1.POST("/login", h.Login)
+		v1.GET("/list", h.GetUserList)
+		v1.GET("/:id", h.GetUser)
 	}
 
 	return r

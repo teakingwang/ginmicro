@@ -20,7 +20,7 @@ const (
 )
 
 var codeMessages = map[string]string{
-	CodeSuccess:          "OK",
+	CodeSuccess:          "success",
 	CodeInvalidArgs:      "请求参数不合法: %s",
 	CodeUnauthorized:     "未授权: %s",
 	CodeForbidden:        "禁止访问: %s",
