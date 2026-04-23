@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/teakingwang/ginmicro/internal/user/handler"
 	"github.com/teakingwang/ginmicro/internal/user/service"
+	"github.com/teakingwang/ginmicro/pkg/middleware"
 )
 
 func NewHTTPRouter(svc service.UserService) *gin.Engine {
@@ -24,6 +25,9 @@ func NewHTTPRouter(svc service.UserService) *gin.Engine {
 		c.Next()
 	})
 
+	// 添加JWT中间件
+	r.Use(middleware.JWTGinMiddleware())
+
 	h := handler.NewUserHandler(svc)
 
 	v1 := r.Group("/v1/user")
@@ -32,6 +36,8 @@ func NewHTTPRouter(svc service.UserService) *gin.Engine {
 		v1.GET("/list", h.GetUserList)
 		v1.GET("/:id", h.GetUser)
 		v1.POST("/create", h.CreateUser)
+		v1.DELETE("/:id", h.DeleteUser)
+		v1.PUT("/:id", h.UpdateUser)
 	}
 
 	return r

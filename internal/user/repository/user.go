@@ -14,6 +14,8 @@ type UserRepo interface {
 	GetAll(ctx context.Context) ([]*model.User, int64, error)
 	GetByUsername(ctx context.Context, username string) (*model.User, error)
 	Create(ctx context.Context, user *model.User) error
+	Delete(ctx context.Context, userID int64) error
+	Update(ctx context.Context, user *model.User) error
 }
 
 type userRepo struct {
@@ -68,4 +70,12 @@ func (repo *userRepo) GetByUsername(ctx context.Context, username string) (*mode
 
 func (repo *userRepo) Create(ctx context.Context, user *model.User) error {
 	return repo.db.Create(user).Error
+}
+
+func (repo *userRepo) Delete(ctx context.Context, userID int64) error {
+	return repo.db.Where("user_id = ?", userID).Delete(&model.User{}).Error
+}
+
+func (repo *userRepo) Update(ctx context.Context, user *model.User) error {
+	return repo.db.Save(user).Error
 }

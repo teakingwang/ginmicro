@@ -41,3 +41,13 @@ type CreateUserReq struct {
 type CreateUserResp struct {
 	User *UserItem `json:"user"`
 }
+
+type UpdateUserReq struct {
+	Password string `json:"password" binding:"omitempty"`
+	Email    string `json:"email" binding:"omitempty,email"`
+	Nickname string `json:"nickname" binding:"omitempty"`
+}
+
+type UpdateUserResp struct {
+	User *UserItem `json:"user"`
+}

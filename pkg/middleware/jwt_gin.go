@@ -10,8 +10,7 @@ import (
 
 // 路径白名单（跳过 JWT 验证）
 var noAuthPaths = map[string]bool{
-	"/v1/user/login":  true,
-	"/v1/user/signup": true,
+	"/v1/user/login": true,
 }
 
 func JWTGinMiddleware() gin.HandlerFunc {
@@ -34,6 +33,7 @@ func JWTGinMiddleware() gin.HandlerFunc {
 		}
 
 		c.Set("user", claims)
+		c.Set("user_id", claims.UserID)
 		c.Next()
 	}
 }

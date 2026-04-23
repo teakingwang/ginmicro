@@ -64,11 +64,13 @@ func (h *UserHandler) GetUserList(c *gin.Context) {
 
 	for _, dto := range userDTOList {
 		list = append(list, &UserItem{
-			UserID:   dto.UserID,
-			Username: dto.Username,
-			Nickname: dto.Nickname,
-			Email:    dto.Email,
-			Mobile:   dto.Mobile,
+			UserID:     dto.UserID,
+			Username:   dto.Username,
+			Nickname:   dto.Nickname,
+			Email:      dto.Email,
+			Mobile:     dto.Mobile,
+			StatusName: dto.StatusName,
+			RoleName:   dto.RoleName,
 		})
 	}
 
@@ -131,8 +133,66 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 			UserID:   userDTO.UserID,
 			Username: userDTO.Username,
 			Nickname: userDTO.Nickname,
-			Email:    userDTO.Email,
-			Mobile:   userDTO.Mobile,
+		},
+	}
+
+	errs.ResponseSuccessWithData(c, resp)
+}
+
+func (h *UserHandler) DeleteUser(c *gin.Context) {
+	id := c.Param("id")
+	logger.Info("DeleteUser called with ID:", id)
+	if id == "" {
+		errs.ResponseError(c, errs.CodeInvalidArgs, "missing user ID")
+		return
+	}
+	// 将 id 转换成 int 类型
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		errs.ResponseError(c, errs.CodeInvalidArgs, "invalid user ID")
+		return
+	}
+
+	err = h.svc.DeleteUser(c.Request.Context(), int64(idInt))
+	if err != nil {
+		errs.ResponseError(c, errs.CodeDatabaseError, err.Error())
+		return
+	}
+
+	errs.ResponseSuccess(c)
+}
+
+func (h *UserHandler) UpdateUser(c *gin.Context) {
+	id := c.Param("id")
+	logger.Info("UpdateUser called with ID:", id)
+	if id == "" {
+		errs.ResponseError(c, errs.CodeInvalidArgs, "missing user ID")
+		return
+	}
+	// 将 id 转换成 int 类型
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		errs.ResponseError(c, errs.CodeInvalidArgs, "invalid user ID")
+		return
+	}
+
+	req := &UpdateUserReq{}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		errs.ResponseError(c, errs.CodeInvalidArgs, err.Error())
+		return
+	}
+
+	userDTO, err := h.svc.UpdateUser(c.Request.Context(), int64(idInt), req.Password, req.Email, req.Nickname)
+	if err != nil {
+		errs.ResponseError(c, errs.CodeDatabaseError, err.Error())
+		return
+	}
+
+	resp := UpdateUserResp{
+		User: &UserItem{
+			UserID:   userDTO.UserID,
+			Username: userDTO.Username,
+			Nickname: userDTO.Nickname,
 		},
 	}
 
